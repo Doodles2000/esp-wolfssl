@@ -1,6 +1,30 @@
 #ifndef wolfcrypt_user_settings_h
 #define wolfcrypt_user_settings_h
 
+#ifdef ESP_IDF
+
+#include <esp_system.h>
+
+static inline int hwrand_generate_block(uint8_t *buf, size_t len) {
+    int i;
+    for (i=0; i+4 < len; i+=4) {
+        *((uint32_t*)buf) = esp_random();
+        buf += 4;
+    }
+    if (i < len) {
+        uint32_t r = esp_random();
+        while (i < len) {
+            *buf++ = r;
+            r >>= 8;
+            i++;
+        }
+    }
+
+    return 0;
+}
+
+#else
+
 #include <esp/hwrand.h>
 
 static inline int hwrand_generate_block(uint8_t *buf, size_t len) {
